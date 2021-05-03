@@ -1,57 +1,72 @@
-const router = require('express').Router()
-const Student = require('../db/models/student')
+const Student = require('../db/models/student');
 
+const router = require('express').Router();
+
+// GET /students
 router.get('/', async (req, res, next) => {
   try {
-    const students = await Student.findAll()
-    res.send(students)
+    const allStudents = await Student.findAll();
+    res.json(allStudents);
   } catch (error) {
-    next(error)
+    next(error);
   }
 })
 
+// Get /students/:id
 router.get('/:id', async (req, res, next) => {
+  const { id } = req.params;
   try {
-    let student = await Student.findByPk(req.params.id)
+    const student = await Student.findByPk(id);
+
     if (student) {
-      res.send(student)
+      res.json(student);
     } else {
-      res.status(404).send('Student not found')
+      res.sendStatus(404);
     }
   } catch (error) {
     next(error)
   }
 })
 
+// POST /students
 router.post('/', async (req, res, next) => {
   try {
-    let student = await Student.create(req.body)
-    res.status(201).send(student)
-  } catch (err) {
-    next(err)
+    const {firstName, lastName, email} = req.body
+    const newStudent = await Student.create({
+      firstName,
+      lastName,
+      email
+    })
+    res.status(201).json(newStudent);
+  } catch (error) {
+    next(error);
   }
 })
 
+// PUT /students/:id
 router.put('/:id', async (req, res, next) => {
   try {
-    let updatedStudentInfo = await Student.update(req.body, {
-      where: { id: req.params.id },
-      returning: true,
-      plain: true,
-    })
-    res.send(updatedStudentInfo[1])
-  } catch (err) {
-    next(err)
+    const {firstName, lastName, email} = req.body
+    const student = await Student.findByPk(req.params.id);
+    student.firstName = firstName;
+    student.lastName = lastName;
+    student.email = email;
+
+    res.json(student);
+  } catch (error) {
+    next(error);
   }
 })
 
+// DELETE /students/:id
 router.delete('/:id', async (req, res, next) => {
   try {
-    await Student.destroy({ where: { id: req.params.id } })
-    res.status(204).send()
-  } catch (err) {
-    next(err)
+    const student = await Student.findByPk(req.params.id);
+    await student.destroy();
+    res.sendStatus(204);
+  } catch (error) {
+    next(error);
   }
 })
 
-module.exports = router
+module.exports = router;
